@@ -1,124 +1,73 @@
--- SS Backdoor Injector GUI Menu Script
--- Made by px734m (Still in development)
-
+-- GUI: What do you want? + выбор ID или оружия
 local Players = game:GetService("Players")
-local InsertService = game:GetService("InsertService")
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
 
-function scanForBackdoor()
-    for _, obj in ipairs(game:GetDescendants()) do
-        if obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction") then
-            if obj.Name:lower():find("backdoor") or obj.Name:lower():find("admin") then
-                return true
-            end
-        end
-    end
-    return false
+-- UI создание
+local screenGui = Instance.new("ScreenGui", playerGui)
+screenGui.Name = "WeaponSelector"
+
+local frame = Instance.new("Frame", screenGui)
+frame.Size = UDim2.new(0, 250, 0, 160)
+frame.Position = UDim2.new(0.5, -125, 0.5, -80)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.BorderSizePixel = 0
+
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1, 0, 0, 30)
+title.Text = "What do you want?"
+title.TextColor3 = Color3.new(1, 1, 1)
+title.BackgroundTransparency = 1
+title.Font = Enum.Font.SourceSansBold
+title.TextSize = 18
+
+local idButton = Instance.new("TextButton", frame)
+idButton.Position = UDim2.new(0.1, 0, 0.3, 0)
+idButton.Size = UDim2.new(0.8, 0, 0.2, 0)
+idButton.Text = "ID"
+idButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+idButton.TextColor3 = Color3.new(1, 1, 1)
+idButton.Font = Enum.Font.SourceSans
+idButton.TextSize = 16
+
+local weaponButton = Instance.new("TextButton", frame)
+weaponButton.Position = UDim2.new(0.1, 0, 0.55, 0)
+weaponButton.Size = UDim2.new(0.8, 0, 0.2, 0)
+weaponButton.Text = "Weapon"
+weaponButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+weaponButton.TextColor3 = Color3.new(1, 1, 1)
+weaponButton.Font = Enum.Font.SourceSans
+weaponButton.TextSize = 16
+
+local devLabel = Instance.new("TextLabel", frame)
+devLabel.Position = UDim2.new(0, 0, 0.85, 0)
+devLabel.Size = UDim2.new(1, 0, 0.15, 0)
+devLabel.Text = "*Still in development*"
+devLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+devLabel.Font = Enum.Font.SourceSansItalic
+devLabel.TextSize = 14
+devLabel.BackgroundTransparency = 1
+
+-- Функции
+local function insertModel(id)
+	local InsertService = game:GetService("InsertService")
+	local model = InsertService:LoadAsset(id)
+	local object = model:GetChildren()[1]
+	object.Parent = workspace
+	object:MoveTo(player.Character.HumanoidRootPart.Position + Vector3.new(0, 3, 0))
 end
 
-function createMenu(player)
-    player:SendNotification({
-        Title = "SS Backdoor Injector",
-        Text = "What do you want?\nChoose: ID or Weapon\n*Still in development*",
-        Duration = 10
-    })
+idButton.MouseButton1Click:Connect(function()
+	local input = tonumber(game:GetService("Chat"):Chat(player.Character.Head, "Enter ID in console/log"))
+	print("Type this line in console: insertModel(YourID)")
+end)
 
-    player.Chatted:Connect(function(message)
-        message = message:lower()
-        if message == "id" then
-            player:SendNotification({
-                Title = "Asset Injector",
-                Text = "What object do you want to add to the game? Provide asset ID:",
-                Duration = 10
-            })
-            wait(1)
-            listenForAssetID(player)
-        elseif message == "weapon" then
-            player:SendNotification({
-                Title = "Weapons Menu",
-                Text = "Choose: Azure Sword or Devil Sword",
-                Duration = 10
-            })
-            player.Chatted:Connect(function(weaponMsg)
-                if weaponMsg:lower():find("azure") then
-                    insertAsset(player, 10288498712)
-                elseif weaponMsg:lower():find("devil") then
-                    insertAsset(player, 13078237623)
-                else
-                    player:SendNotification({
-                        Title = "Invalid",
-                        Text = "Invalid weapon name",
-                        Duration = 5
-                    })
-                end
-            end)
-        end
-    end)
-end
-
-function listenForAssetID(player)
-    player.Chatted:Connect(function(idMsg)
-        local id = tonumber(idMsg)
-        if id then
-            insertAsset(player, id)
-        else
-            player:SendNotification({
-                Title = "Error",
-                Text = "Invalid ID",
-                Duration = 5
-            })
-        end
-    end)
-end
-
-function insertAsset(player, assetID)
-    local success, model = pcall(function()
-        return InsertService:LoadAsset(assetID)
-    end)
-    if success and model then
-        local asset = model:GetChildren()[1]
-        if asset then
-            player:SendNotification({
-                Title = "Confirm",
-                Text = "Found '" .. asset.Name .. "'. Is this what you wanted? (yes/no)",
-                Duration = 10
-            })
-
-            player.Chatted:Connect(function(confirm)
-                if confirm:lower() == "yes" then
-                    asset.Parent = workspace
-                    asset:MoveTo(player.Character.Head.Position + Vector3.new(0, 3, 0))
-                    player:SendNotification({
-                        Title = "Success",
-                        Text = "Okay, the object has been added, look in front of you.",
-                        Duration = 5
-                    })
-                elseif confirm:lower() == "no" then
-                    player:SendNotification({
-                        Title = "Retry",
-                        Text = "Write your ID model here:",
-                        Duration = 5
-                    })
-                    listenForAssetID(player)
-                end
-            end)
-        end
-    else
-        player:SendNotification({
-            Title = "Error",
-            Text = "Could not load asset. Retry with different ID.",
-            Duration = 5
-        })
-    end
-end
-
-if scanForBackdoor() then
-    local player = Players.LocalPlayer or Players:GetPlayers()[1]
-    if player then
-        player:SendNotification({
-            Title = "SS Script",
-            Text = "Conditions for the SS script to work have been found!",
-            Duration = 10
-        })
-        createMenu(player)
-    end
-end
+weaponButton.MouseButton1Click:Connect(function()
+	local options = {
+		["Azure Sword"] = 10288498712,
+		["Devil sword"] = 13078237623
+	}
+	
+	local chosen = "Azure Sword" -- или Devil sword, можешь сделать выбор через доп. GUI
+	insertModel(options[chosen])
+end)
